@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import joblib
@@ -13,7 +12,7 @@ st.set_page_config(
 
 # Load the trained model
 MODEL_PATH = Path("models/churn_model.pkl")
-DATA_PATH = Path("data/churn.csv")
+DATA_PATH = Path("models/scored_customers.csv")
 
 st.title("🏦 Bank Customer Churn Intelligence")
 st.write(
@@ -133,57 +132,16 @@ st.write(
 
 if DATA_PATH.exists():
     try:
-        churn_df = pd.read_csv(DATA_PATH)
-
-        # Remove columns not used for model training
-        X = churn_df.drop(
-            columns=["CustomerId", "Surname", "Year", "Exited"],
-            errors="ignore"
-        ).copy()
-
-        # Re-create the same engineered features used during training
-        X["BalanceSalaryRatio"] = (
-            X["Balance"] / X["EstimatedSalary"].clip(lower=1)
-        )
-        X["ProductDensity"] = (
-            X["NumOfProducts"] / (X["Tenure"] + 1)
-        )
-        X["EngagementProduct"] = (
-            X["IsActiveMember"] * X["NumOfProducts"]
-        )
-        X["AgeTenureInteraction"] = X["Age"] * X["Tenure"]
-
-        # Calculate churn probabilities for all customers
-        probabilities = model.predict_proba(X)[:, 1]
-
-        chart_df = pd.DataFrame({
-            "Predicted Churn Probability": probabilities,
-            "Actual Customer Status": churn_df["Exited"].map({
-                0: "Stayed",
-                1: "Exited"
-            })
-        })
+        scored = pd.read_csv(DATA_PATH)
 
         fig, ax = plt.subplots(figsize=(9, 5))
 
-        for status in ["Stayed", "Exited"]:
-            values = chart_df.loc[
-                chart_df["Actual Customer Status"] == status,
-                "Predicted Churn Probability"
-            ]
+        for label, name in [(0, "Stayed"), (1, "Exited")]:
+            values = scored.loc[scored["Exited"] == label, "Probability"]
             if not values.empty:
-                ax.hist(
-                    values,
-                    bins=20,
-                    alpha=0.6,
-                    label=status
-                )
+                ax.hist(values, bins=20, alpha=0.6, label=name)
 
-        ax.axvline(
-            0.5,
-            linestyle="--",
-            label="50% decision threshold"
-        )
+        ax.axvline(0.5, linestyle="--", label="50% decision threshold")
         ax.set_xlabel("Predicted Churn Probability")
         ax.set_ylabel("Number of Customers")
         ax.set_title("Predicted Churn Risk Distribution")
@@ -194,15 +152,16 @@ if DATA_PATH.exists():
         plt.close(fig)
 
         st.caption(
-            "Probabilities are model estimates. The dashed line marks "
-            "the current 50% classification threshold. Actual status is "
-            "shown for comparison; this chart is not a guarantee of future churn."
+            "Scores come from the trained model on the full dataset, including "
+            "records used for training, so separation looks stronger than on "
+            "unseen data. Actual status is shown for comparison only; this "
+            "chart is not a guarantee of future churn."
         )
 
     except Exception as e:
         st.error(f"Could not create the probability chart: {e}")
 else:
-    st.warning("Dataset not found. Check that data/churn.csv exists.")
+    st.warning("Scored data not found. Run make_scores.py first.")
     
 # What-If Scenario Simulator
 st.divider()
@@ -339,6 +298,3 @@ if confusion_path.exists():
     )
 else:
     st.warning("Run compare_models.py to generate the confusion matrix.")
-
-
-
