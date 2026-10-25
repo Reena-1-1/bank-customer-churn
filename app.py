@@ -298,3 +298,35 @@ if confusion_path.exists():
     )
 else:
     st.warning("Run compare_models.py to generate the confusion matrix.")
+
+# Model Comparison and Partial Dependence
+st.divider()
+st.subheader("📈 Model Comparison")
+
+comparison_path = Path("images/model_comparison.png")
+
+if comparison_path.exists():
+    st.image(
+        str(comparison_path),
+        caption="Model comparison on the test set",
+        use_container_width=True
+    )
+else:
+    st.info("Run compare_models.py to generate the comparison chart.")
+
+st.subheader("📉 Partial Dependence")
+
+pdp_path = Path("images/partial_dependence.png")
+
+if pdp_path.exists():
+    st.image(
+        str(pdp_path),
+        caption="Average effect of key features on predicted churn probability",
+        use_container_width=True
+    )
+else:
+    st.info("Run partial_dependence.py to generate the chart.")
+
+st.caption(
+    "Partial dependence shows average model behaviour, not cause and effect."
+)
