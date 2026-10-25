@@ -1,0 +1,30 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# IDE settings
+.vscode/
+.idea/
+
+# Temporary files
+*.log
+.DS_Store
+Thumbs.db
+
+# Dataset: publish only after checking its source and licence
+data/
+
+# Generated model: include only if appropriate for the repository
+# models/*.pkl
